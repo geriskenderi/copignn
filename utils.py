@@ -45,8 +45,11 @@ def eval_mis(edge_index, pred, d, n):
                 problem_edges.append(edge)
 
     # Remove (greedily) the nodes from the MIS
-    problem_edges = torch.vstack(problem_edges).T
-    postpred = ind_set_nodes[~torch.isin(ind_set_nodes, problem_edges[0].unique())]
+    if len(problem_edges):
+        problem_edges = torch.vstack(problem_edges).T
+        postpred = ind_set_nodes[~torch.isin(ind_set_nodes, problem_edges[0].unique())]
+    else:
+        postpred = pred
 
     # Calculate independence number
     alpha = len(postpred) / n
