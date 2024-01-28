@@ -1,9 +1,8 @@
 import torch
 import networkx as nx
-from torch_geometric.data import Data #, Dataset
+from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch_geometric.utils import from_networkx
-from tqdm import tqdm
 
 class DRegDataset(Dataset):
     def __init__(self, d=3, num_graphs=1000, num_nodes=100, in_dim=1, seed=0):
