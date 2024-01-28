@@ -4,7 +4,7 @@ import argparse
 import torch
 import numpy as np
 from tqdm import tqdm
-from datetime import datetime
+from time import time
 from torch_geometric.loader import DataLoader
 from lightning import Trainer
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
@@ -22,7 +22,8 @@ def run(args):
     torch.cuda.manual_seed_all(args.seed)
 
     # Create datasets and loaders
-    in_dim = args.num_nodes ** 0.5 if args.num_nodes >= 1e5 else args.num_nodes ** (1/3)
+    #  in_dim = args.num_nodes ** 0.5 if args.num_nodes >= 1e5 else args.num_nodes ** (1/3) # In the example code provided by the authors they don't use the cubic root, even though it is stated in the paper
+    in_dim = args.num_nodes ** 0.5
     in_dim = round(in_dim)
     dataset = DRegDataset(args.node_degree, args.num_graphs, args.num_nodes, in_dim, args.seed)
     print('dataset len:', len(dataset))
@@ -60,6 +61,7 @@ def run(args):
         check_val_every_n_epoch=1,
     )
 
+    start_time = time()
     trainer.fit(model, train_dataloaders=dataloader, val_dataloaders=dataloader)
 
     # Evaluate after training
@@ -76,7 +78,7 @@ def run(args):
             e.append(energy.item()), a.append(approx_ratio.item())
 
     print(f'Avg. estimated energy: {np.mean(e)}, avg. approximation ratio: {np.mean(a)}')    
-    print(f'Completed training for seed={args.seed}')
+    print(f'Completed training and evaluation for seed={args.seed} in {round(time()-start_time, 2)}s')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -85,14 +87,13 @@ if __name__ == '__main__':
     parser.add_argument('--num_nodes', type=int, default=100)
     parser.add_argument('--node_degree', type=int, default=3)
     parser.add_argument('--batch_size', type=int, default=1)
-    parser.add_argument('--learning_rate', type=float, default=0.0001)
+    parser.add_argument('--learning_rate', type=float, default=1e-4)
     parser.add_argument('--epochs', type=int, default=int(1e5))
     parser.add_argument('--num_workers', type=int, default=6)
     parser.add_argument('--gpu_num', type=int, default=0)
-    parser.add_argument('--maxcut', action='store_true', help='If this flag is true solves the maxcut problem, else mis')
+    parser.add_argument('--maxcut', action='store_true', help='If this flag is true solve the maxcut problem, else solve mis')
     parser.add_argument('--gnn_model', type=int, default=0)
-    parser.add_argument('--num_heads', type=int, default=4)
-    # parser.add_argument('--logging_info', type=str)
+    parser.add_argument('--num_heads', type=int, default=4, help='Nr of heads if you wish to use GAT Ansatz')
 
     args = parser.parse_args()
     run(args)

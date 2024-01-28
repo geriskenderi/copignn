@@ -1,9 +1,7 @@
-import math
 import torch
 import lightning as L
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, GATConv, GATv2Conv, GraphConv
-
 from utils import maxcut_hamiltonian, mis_hamiltonian
 
 MODEL_KEY_DICT = {
@@ -12,8 +10,6 @@ MODEL_KEY_DICT = {
     2: 'GATv2',
     3: 'GraphConv'
 }
-
-
 
 class COPIGNN(L.LightningModule):
     def __init__(self, in_dim, hidden_dim, co_problem, lr=1e-3, out_dim=1, num_heads=1, layer_type=0):
@@ -70,5 +66,5 @@ class COPIGNN(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         x, edge_index = batch.x, batch.edge_index
         pred = self.forward(x, edge_index)
-        loss = self.loss_fn(edge_index, pred.round()) # For validation, round to nearest int
+        loss = self.loss_fn(edge_index, pred.round()) # round to nearest int for validatio, i.e. calc QUBO
         self.log('val_loss', loss, prog_bar=True)
